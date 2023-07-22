@@ -1,16 +1,17 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
+// import React from 'react'
+// import ReactDOM from 'react-dom'
 import './index.css'
 import reportWebVitals from './reportWebVitals'
-import createElement from './createElement'
+/** @jsxRuntime classic */
+import create from './createElement'
 
 
 // // React相关使用
 // const element = <h1 title="foo">Hello</h1> //定义一个React element
 // const container = document.getElementById('root') //从DOM中拿到一个节点
 // ReactDOM.render(element, container) //将元素渲染到容器中
-
-createElement()
+/** @jsxRuntime classic */
+create()
 
 
 

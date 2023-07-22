@@ -1,5 +1,5 @@
 import React from 'react'
-const createElement = () => {
+const create = () => {
 
   // // React相关使用
   // const element = <h1 title="foo">Hello</h1> //定义一个React element
@@ -9,11 +9,6 @@ const createElement = () => {
   // 1. const element = <h1 title="foo">Hello</h1>
   // 创建元素——createElement
   // const element=React.createElement()
-  const element1 = React.createElement(
-    'h1',
-    { title: 'foo' },
-    "hello"
-  )
   // 一个JSX元素就是带有type和props属性的对象。type指定了DOM节点的类型，即标签名  props是个对象，从JSX属性中接收所有的key、value，并且有一个特别的属性children
   const element = {
     type: 'h1',
@@ -37,12 +32,6 @@ const createElement = () => {
 
 
   // 例子：
-  const element2 = (
-    <div id="foo">
-      <a>bar</a>
-      <b />
-    </div>
-  )
   // const container=document.getElementById('root')
   // ReactDOM.render(element2, container)
 
@@ -115,38 +104,22 @@ const createElement = () => {
 
 
   // Render
-  function render1 (element, container) {
-    // 根据element中的type属性创建DOM节点 再将新节点添加到容器中
-    // 当element是TEXT_ELEMENT时，我们创建一个text节点 而不是普通的节点
-    const dom = element.type === "TEXT_ELEMENT" ? document.createTextNode("") :
-      document.createElement(element.type)
-
-    //把element的属性赋值给node
-    const isProperty = key => key !== "children"
-    Object.keys(element.props).filter(isProperty).forEach(name => {
-      dom[name] = element.props[name]
-    })
-
-    // 对子节点递归做相同的处理
-    element.props.children.forEach(child =>
-      render(child, dom)
-    )
-
-    container.appendChild(dom)
-
-  }
 
   // 创建 DOM节点抽离出函数
+  // 根据fiber节点创建真实的dom节点
   function createDom (fiber) {
     const dom =
       fiber.type === "TEXT_ELEMENT" ? document.createTextNode("") :
         document.createElement(fiber.type)
 
+    // updataDom执行了相同的逻辑
     //把element的属性赋值给node
-    const isProperty = key => key !== "children"
-    Object.keys(fiber.props).filter(isProperty).forEach(name => {
-      dom[name] = fiber.props[name]
-    })
+    console.log(111, fiber)
+    // const isProperty = key => key !== "children"
+    // Object.keys(fiber.props).filter(isProperty).forEach(name => {
+    //   dom[name] = fiber.props[name]
+    // })
+    updateDom(dom, {}, fiber.props)
     return dom
   }
 
@@ -155,18 +128,24 @@ const createElement = () => {
   let currentRoot = null
   let deletions = null
 
+  // // render函数主要逻辑：
+  //   根据root container容器创建root fiber
+  //   将nextUnitOfWork指针指向root fiber
+  //   element是react element tree
   function render (element, container) {
+    console.log("render", element)
     // render 函数中我们把 nextUnitOfWork 置为 fiber 树的根节点。
     wipRoot = {
       dom: container,
       props: {
-        children: [element]
+        children: [element]// 此时的element还只是React.createElement函数创建的virtual dom树
       },
       alternate: currentRoot,
     }
+    console.log('wipRoot', wipRoot)
     deletions = []
     nextUnitOfWork = wipRoot
-    console.log('render')
+    // console.log('render')
   }
 
   function commitRoot () {
@@ -175,6 +154,7 @@ const createElement = () => {
     currentRoot = wipRoot
     wipRoot = null
   }
+  // 递归执行 commit，此过程不中断
   function commitWork (fiber) {
     if (!fiber) {
       return
@@ -187,6 +167,7 @@ const createElement = () => {
     } else if (fiber.effectTag === "UPDATA" && fiber.dom != null) {
       updateDom(fiber.dom, fiber.alternate.props, fiber.props)
     }
+    // // 深度优先遍历，先遍历 child，后遍历 sibling
     commitWork(fiber.child)
     commitWork(fiber.sibling)
   }
@@ -292,6 +273,15 @@ const createElement = () => {
     }
   }
 
+  // 执行当前工作单元并设置下一个要执行的工作单元
+  // performUnitOfWork函数主要逻辑：
+  //   将element元素添加到DOM
+  //   给element的子元素创建对应的fiber节点
+  //   返回下一个工作单元，即下一个fiber节点，查找过程：
+  //      1.如果有子元素，则返回子元素的fiber节点
+  //      2.如果没有子元素，则返回兄弟元素的fiber节点
+  //      3.如果既没有子元素又没有兄弟元素，则往上查找其父节点的兄弟元素的fiber节点
+  //      4.如果往上查找到root fiber节点，说明render过程已经结束
   function performUnitOfWork (fiber) {
     // 首先创建 fiber 对应的 DOM 节点，并将它添加（append）到父节点的 DOM 上。
     if (!fiber.dom) {
@@ -327,17 +317,23 @@ const createElement = () => {
     render
   }
 
-  const element4 = Didact.createElement(
-    "div",
-    { id: "foo" },
-    Didact.createElement("a", null, "bar-element4"),
-    Didact.createElement("b")
-  )
-  console.log(element4)
+  /** @jsxRuntime classic */
+  /** @jsx Didact.createElement */
+  const element5 = (<div>
+    <p>123</p>
+    <span>536</span>
+  </div>)
+  Didact.render(element5, container)
+  // const element4 = Didact.createElement(
+  //   "div",
+  //   { id: "foo" },
+  //   Didact.createElement("a", null, "bar-element44"),
+  //   Didact.createElement("b")
+  // )
+  // console.log(element4)
 
-  Didact.render(element4, container)
-
+  // Didact.render(element4, container)
 
 }
 
-export default createElement
+export default create
